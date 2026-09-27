@@ -522,17 +522,61 @@ function updateSkewerVisualPct(){
     if(!el) return;
     const now = performance.now();
     const age = now - sk.startedAt;
-    const pctEl = el.querySelector('.pct');
-    if(pctEl){
-      if(sk.state==='burnt') pctEl.textContent = 'CHÁY';
-      else if(sk.state==='perfect') pctEl.textContent = 'CHÍN TỚI';
-      else pctEl.textContent = Math.min(100,Math.round(age/COOK_TIME_PERFECT_MIN*100))+'%';
+    const pctEl = el.querySelector('.pct-badge');
+    if(pctEl && sk.state==='raw'){
+      pctEl.textContent = Math.min(99,Math.round(age/COOK_TIME_PERFECT_MIN*100))+'%';
     }
   });
+}
+// Bảng màu viên chiên theo độ chín
+const BALL_COLORS = {
+  raw:     ['#e8c9a0', '#dcb98c', '#e0c095'],   // sống - nhạt, tái
+  cooking: ['#e8a23f', '#d4901f', '#e6a94a'],   // đang chín vàng ươm
+  perfect: ['#c97a2e', '#b8691f', '#cc7d33'],   // chín tới - nâu vàng đẹp
+  burnt:   ['#3a2318', '#2e1b12', '#42281a'],   // cháy đen
+};
+function skewerSVG(state){
+  // xác định màu 3 viên chiên theo state
+  let colors;
+  if(state==='raw') colors = BALL_COLORS.raw;
+  else if(state==='perfect') colors = BALL_COLORS.perfect;
+  else if(state==='cooking') colors = BALL_COLORS.cooking;
+  else if(state==='burnt') colors = BALL_COLORS.burnt;
+  else colors = BALL_COLORS.perfect; // taken - giữ màu chín tới
+  const smokeOpacity = (state==='cooking') ? 0.55 : (state==='burnt' ? 0.8 : 0);
+  return `
+  <svg viewBox="0 0 44 108" xmlns="http://www.w3.org/2000/svg">
+    ${smokeOpacity>0 ? `
+    <g opacity="${smokeOpacity}">
+      <path d="M14 18 Q10 10 15 4" stroke="#cfcfcf" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+      <path d="M30 16 Q34 8 28 2" stroke="#cfcfcf" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    </g>` : ''}
+    <!-- que xiên tre -->
+    <rect x="20.5" y="6" width="3" height="96" rx="1.5" fill="#c9903f"/>
+    <rect x="21.2" y="6" width="1" height="96" fill="#e0b06a" opacity=".6"/>
+    <polygon points="20.5,102 23.5,102 22,108" fill="#a8722a"/>
+    <!-- 3 viên chiên xâu trên que -->
+    <ellipse cx="22" cy="26" rx="15" ry="13" fill="${colors[0]}"/>
+    <ellipse cx="22" cy="26" rx="15" ry="13" fill="url(#shine)" opacity=".5"/>
+    <ellipse cx="22" cy="52" rx="15.5" ry="13.5" fill="${colors[1]}"/>
+    <ellipse cx="22" cy="52" rx="15.5" ry="13.5" fill="url(#shine)" opacity=".5"/>
+    <ellipse cx="22" cy="78" rx="15" ry="13" fill="${colors[2]}"/>
+    <ellipse cx="22" cy="78" rx="15" ry="13" fill="url(#shine)" opacity=".5"/>
+    <defs>
+      <radialGradient id="shine" cx="35%" cy="30%" r="60%">
+        <stop offset="0%" stop-color="#fff" stop-opacity=".5"/>
+        <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+  </svg>`;
 }
 function renderSkewerRack(){
   const rack = document.getElementById('skewerRack');
   rack.innerHTML = '';
+  if(S.serve.skewers.length === 0){
+    rack.innerHTML = `<div class="rack-empty-hint">Vỉ đang trống — bấm "Đặt xiên lên vỉ" để bắt đầu nướng 🔥</div>`;
+    return;
+  }
   S.serve.skewers.forEach(sk=>{
     const div = document.createElement('div');
     div.className = 'skewer ' + sk.state;
@@ -541,11 +585,11 @@ function renderSkewerRack(){
     if(sk.state==='burnt') pctText='CHÁY';
     else if(sk.state==='perfect') pctText='CHÍN TỚI';
     else if(sk.state==='cooking') pctText='QUÁ LỬA';
+    else if(sk.state==='taken') pctText='✅';
     else pctText='SỐNG';
     div.innerHTML = `
-      <div class="heat-ring"></div>
-      <div class="stick">🍢</div>
-      <div class="pct">${pctText}</div>
+      <div class="pct-badge">${pctText}</div>
+      ${skewerSVG(sk.state)}
     `;
     div.addEventListener('click', ()=>flipSkewer(sk.id));
     rack.appendChild(div);

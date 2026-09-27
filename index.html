@@ -87,6 +87,12 @@
     background:
       radial-gradient(ellipse at 50% -10%, #3a2f26 0%, transparent 60%),
       linear-gradient(180deg, #241c17 0%, #1a1410 55%, #120e0b 100%);
+    position:relative;
+    overflow:hidden;
+  }
+  .street-skyline{
+    position:absolute; left:0; right:0; bottom:0; height:38%;
+    z-index:0; pointer-events:none; opacity:.9;
   }
   .street-hero{
     flex:1;
@@ -95,9 +101,11 @@
     padding:10px 20px 0;
     text-align:center;
     position:relative;
+    z-index:1;
   }
-  .cart-emoji{font-size:74px; filter:drop-shadow(0 8px 14px rgba(0,0,0,.5)); animation:sway 3.2s ease-in-out infinite;}
-  @keyframes sway{0%,100%{transform:rotate(-2deg) translateY(0);}50%{transform:rotate(2deg) translateY(-4px);}}
+  .cart-wrap{ width:168px; height:168px; filter:drop-shadow(0 10px 16px rgba(0,0,0,.55)); animation:sway 3.4s ease-in-out infinite; }
+  .cart-wrap svg{ width:100%; height:100%; }
+  @keyframes sway{0%,100%{transform:rotate(-1.4deg) translateY(0);}50%{transform:rotate(1.4deg) translateY(-5px);}}
   .weather-chip{
     display:flex; align-items:center; gap:6px;
     background:rgba(0,0,0,.28); border:1px solid var(--panel-line);
@@ -141,7 +149,7 @@
   }
 
   /* ---------- SERVE SCREEN ---------- */
-  #screen-serve{background: linear-gradient(180deg,#20140f 0%, #150d09 100%);}
+  #screen-serve{background: linear-gradient(180deg,#20140f 0%, #150d09 100%); overflow-y:auto;}
   .serve-top{
     display:flex; align-items:center; justify-content:space-between;
     padding:8px 14px; flex-shrink:0;
@@ -156,7 +164,8 @@
   }
 
   .customer-stage{
-    flex:1;
+    flex-shrink:0;
+    max-height:34vh;
     display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
     padding:6px 16px 4px;
     position:relative;
@@ -193,31 +202,71 @@
 
   .minigame-zone{
     flex-shrink:0;
-    padding:8px 16px calc(14px + env(safe-area-inset-bottom,0px));
+    padding:6px 14px calc(12px + env(safe-area-inset-bottom,0px));
     display:flex; flex-direction:column; gap:8px;
   }
+
+  /* ---------- VỈ THAN NƯỚNG (vẽ chi tiết) ---------- */
+  .grill-wrap{
+    position:relative;
+    border-radius:18px;
+    padding:14px 12px 18px;
+    background:
+      radial-gradient(ellipse at 50% 0%, rgba(255,120,40,.10), transparent 65%),
+      linear-gradient(180deg, #2a1810 0%, #1c110a 100%);
+    border:1.5px solid #4a2e1c;
+    box-shadow: inset 0 2px 8px rgba(0,0,0,.5);
+    min-height:150px;
+  }
+  .grill-coals{
+    position:absolute; left:10px; right:10px; bottom:8px; height:34px;
+    border-radius:14px;
+    background:
+      radial-gradient(circle at 20% 50%, #ff8a3d 0%, transparent 40%),
+      radial-gradient(circle at 55% 40%, #ff5a1f 0%, transparent 45%),
+      radial-gradient(circle at 80% 55%, #ffb35c 0%, transparent 38%),
+      #3a1a0a;
+    opacity:.85;
+    filter:blur(.3px);
+    animation:emberGlow 1.8s ease-in-out infinite alternate;
+  }
+  @keyframes emberGlow{from{opacity:.65;}to{opacity:.95;}}
+  .grill-grid{
+    position:absolute; left:6px; right:6px; top:38px; height:8px;
+    background-image: repeating-linear-gradient(90deg, #6b4a30 0px, #6b4a30 3px, transparent 3px, transparent 13px);
+    opacity:.9; border-radius:2px;
+  }
   .skewer-rack{
-    display:flex; gap:8px; justify-content:center; flex-wrap:wrap;
-    min-height:96px; align-items:center;
+    position:relative; z-index:2;
+    display:flex; gap:10px; justify-content:center; flex-wrap:wrap;
+    align-items:flex-end;
+    min-height:120px; padding-top:4px;
   }
   .skewer{
-    position:relative; width:58px; height:88px;
-    border-radius:10px; background:var(--panel); border:1.5px solid var(--panel-line);
-    display:flex; align-items:center; justify-content:center; flex-direction:column;
+    position:relative; width:52px; height:128px;
+    display:flex; flex-direction:column; align-items:center;
     cursor:pointer; -webkit-tap-highlight-color:transparent;
+    -webkit-tap-highlight-color:transparent;
+    touch-action:manipulation;
   }
-  .skewer .stick{font-size:28px;}
-  .skewer .heat-ring{
-    position:absolute; top:-6px; left:-6px; right:-6px; bottom:-6px;
-    border-radius:14px; border:3px solid transparent;
-    pointer-events:none;
+  .skewer svg{ width:44px; height:108px; display:block; pointer-events:none; }
+  .skewer .pct-badge{
+    position:absolute; top:-9px; left:50%; transform:translateX(-50%);
+    font-size:9.5px; font-weight:800; padding:2px 7px; border-radius:8px;
+    white-space:nowrap; letter-spacing:.2px;
+    background:#3a2c22; color:#d8c9b8; border:1px solid #5c4632;
   }
-  .skewer.raw .heat-ring{border-color:#5c6b38;}
-  .skewer.cooking .heat-ring{border-color:var(--gold);}
-  .skewer.perfect .heat-ring{border-color:#7ed957; box-shadow:0 0 12px rgba(126,217,87,.6);}
-  .skewer.burnt .heat-ring{border-color:var(--danger);}
-  .skewer .pct{position:absolute; bottom:4px; font-size:10px; font-weight:700; opacity:.8;}
-  .skewer .tapme{font-size:9px; opacity:.6; margin-top:2px;}
+  .skewer.raw .pct-badge{background:#3d4a28; color:#c3d99a; border-color:#5c6b38;}
+  .skewer.cooking .pct-badge{background:#4a3510; color:#f0c97a; border-color:var(--gold);}
+  .skewer.perfect .pct-badge{background:#274a1f; color:#a8e888; border-color:#7ed957; box-shadow:0 0 8px rgba(126,217,87,.45);}
+  .skewer.burnt .pct-badge{background:#4a1a1a; color:#f0a0a0; border-color:var(--danger);}
+  .skewer:active svg{ transform:scale(.96); }
+
+  .rack-empty-hint{
+    position:relative; z-index:2;
+    display:flex; align-items:center; justify-content:center;
+    min-height:110px; font-size:12.5px; opacity:.55; text-align:center; padding:0 20px;
+  }
 
   .serve-cta{
     display:flex; gap:8px;
@@ -272,10 +321,13 @@
     display:flex; align-items:center; justify-content:space-between; gap:10px;
   }
   .stepper button{
-    width:38px; height:38px; border-radius:10px; border:none;
-    background:var(--panel-line); color:var(--paper); font-size:20px; font-weight:800;
+    width:46px; height:46px; border-radius:12px; border:none;
+    background:var(--panel-line); color:var(--paper); font-size:22px; font-weight:800;
+    display:flex; align-items:center; justify-content:center; padding:0; line-height:1;
+    -webkit-tap-highlight-color:transparent; cursor:pointer;
   }
-  .stepper .val{font-size:20px; font-weight:800; min-width:44px; text-align:center;}
+  .stepper button:active{ filter:brightness(1.25); transform:scale(.95); }
+  .stepper .val{font-size:22px; font-weight:800; min-width:50px; text-align:center;}
   .stock-note{font-size:11px; opacity:.55; margin-top:6px;}
 
   .prep-footer{
@@ -330,6 +382,7 @@
   }
   #phoneOverlay.active{display:flex;}
   .phone-sheet{
+    position:relative;
     width:100%; max-height:78%;
     background:#171310; border-radius:22px 22px 0 0;
     border:1px solid var(--panel-line); border-bottom:none;
@@ -339,22 +392,23 @@
   }
   @keyframes sheetUp{from{transform:translateY(30px); opacity:.4;}to{transform:none; opacity:1;}}
   .sheet-handle{width:38px; height:4px; background:var(--panel-line); border-radius:3px; margin:0 auto 12px;}
-  .sheet-title{font-size:17px; font-weight:800; margin-bottom:10px; display:flex; align-items:center; gap:7px;}
+  .sheet-title{font-size:17px; font-weight:800; margin-bottom:10px; display:flex; align-items:center; gap:7px; color:var(--paper);}
   .phone-section{margin-bottom:16px;}
-  .phone-section h4{font-size:12px; text-transform:none; opacity:.55; margin:0 0 8px; font-weight:700;}
-  .hour-bars{display:flex; align-items:flex-end; gap:3px; height:60px; margin-bottom:4px;}
-  .hbar{flex:1; background:var(--ember); border-radius:3px 3px 0 0; opacity:.5;}
-  .hbar.now{opacity:1; background:var(--gold);}
-  .hour-labels{display:flex; gap:3px; font-size:8.5px; opacity:.5; text-align:center;}
+  .phone-section h4{font-size:12px; text-transform:none; opacity:.75; margin:0 0 8px; font-weight:700; color:var(--paper);}
+  .hour-bars{display:flex; align-items:flex-end; gap:4px; height:64px; margin-bottom:6px; background:rgba(255,255,255,.04); border-radius:8px; padding:6px 4px 0;}
+  .hbar{flex:1; background:var(--tea); border-radius:3px 3px 0 0; opacity:.65; min-height:6px;}
+  .hbar.now{opacity:1; background:var(--gold); box-shadow:0 0 8px rgba(232,184,75,.5);}
+  .hour-labels{display:flex; gap:4px; font-size:10px; opacity:.7; text-align:center; color:var(--paper); font-weight:600;}
   .hour-labels span{flex:1;}
   .msg-item{
     background:var(--panel); border:1px solid var(--panel-line); border-radius:12px;
-    padding:9px 12px; font-size:12.5px; margin-bottom:7px; line-height:1.5;
+    padding:9px 12px; font-size:13px; margin-bottom:7px; line-height:1.55; color:var(--paper);
   }
   .close-sheet{
-    position:absolute; top:16px; right:16px; width:30px; height:30px; border-radius:50%;
+    position:absolute; top:14px; right:14px; width:32px; height:32px; border-radius:50%;
     background:var(--panel); border:1px solid var(--panel-line); color:var(--paper);
-    font-size:15px; display:flex; align-items:center; justify-content:center;
+    font-size:16px; display:flex; align-items:center; justify-content:center;
+    z-index:2;
   }
 
   /* ---------- ONBOARDING ---------- */
@@ -362,7 +416,7 @@
     justify-content:center; align-items:center; text-align:center; padding:26px; gap:12px;
     background:linear-gradient(180deg,#241c17,#120e0b);
   }
-  #screen-intro .cart-emoji{font-size:88px;}
+  #screen-intro .cart-wrap{width:190px; height:190px;}
   #screen-intro h1{font-size:26px; margin:6px 0 2px;}
   #screen-intro p{font-size:14px; opacity:.7; max-width:280px; line-height:1.6; margin:0;}
 
@@ -374,7 +428,46 @@
 
   <!-- ============ INTRO ============ -->
   <div class="screen active" id="screen-intro">
-    <div class="cart-emoji">🛒</div>
+    <div class="cart-wrap">
+      <svg viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="80" cy="148" rx="52" ry="7" fill="#000" opacity=".3"/>
+        <rect x="20" y="56" width="96" height="58" rx="6" fill="#3a2418" stroke="#5c3a24" stroke-width="2"/>
+        <rect x="26" y="62" width="84" height="46" rx="3" fill="#241609"/>
+        <rect x="32" y="68" width="72" height="14" rx="3" fill="#1a0f07"/>
+        <g opacity=".9">
+          <ellipse cx="42" cy="75" rx="5" ry="4" fill="#ff7a2e"/>
+          <ellipse cx="58" cy="75" rx="5" ry="4" fill="#ff9a45"/>
+          <ellipse cx="74" cy="75" rx="5" ry="4" fill="#ff5a1f"/>
+          <ellipse cx="90" cy="75" rx="5" ry="4" fill="#ff8a3d"/>
+        </g>
+        <line x1="40" y1="68" x2="40" y2="46" stroke="#c9903f" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="40" cy="50" r="4.5" fill="#c97a2e"/>
+        <circle cx="40" cy="58" r="4.5" fill="#b8691f"/>
+        <line x1="58" y1="68" x2="58" y2="42" stroke="#c9903f" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="58" cy="46" r="4.5" fill="#cc7d33"/>
+        <circle cx="58" cy="54" r="4.5" fill="#c97a2e"/>
+        <circle cx="58" cy="62" r="4.5" fill="#b8691f"/>
+        <line x1="76" y1="68" x2="76" y2="48" stroke="#c9903f" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="76" cy="52" r="4.5" fill="#c97a2e"/>
+        <circle cx="76" cy="60" r="4.5" fill="#cc7d33"/>
+        <path d="M14 56 L80 30 L146 56 Z" fill="#b8451c"/>
+        <path d="M14 56 L80 30 L146 56" fill="none" stroke="#8a3416" stroke-width="2"/>
+        <g fill="#e8622c">
+          <path d="M22 56 L38 49 L48 56 Z"/>
+          <path d="M58 56 L74 44 L86 56 Z"/>
+          <path d="M96 56 L112 47 L128 56 Z"/>
+        </g>
+        <rect x="16" y="55" width="4" height="18" fill="#5c3a24"/>
+        <rect x="140" y="55" width="4" height="18" fill="#5c3a24"/>
+        <rect x="44" y="86" width="72" height="16" rx="3" fill="#1a0f07" stroke="#5c3a24" stroke-width="1.5"/>
+        <text x="80" y="97" font-size="9" font-weight="800" fill="#e8b84b" text-anchor="middle" font-family="Arial">XIÊN BẨN</text>
+        <circle cx="34" cy="120" r="10" fill="#241609" stroke="#5c3a24" stroke-width="2.5"/>
+        <circle cx="34" cy="120" r="3" fill="#8a6a4a"/>
+        <circle cx="104" cy="120" r="10" fill="#241609" stroke="#5c3a24" stroke-width="2.5"/>
+        <circle cx="104" cy="120" r="3" fill="#8a6a4a"/>
+        <path d="M116 62 Q134 58 134 78" fill="none" stroke="#5c3a24" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+    </div>
     <h1>Vỉa Hè Khởi Nghiệp</h1>
     <p>Bạn có 500.000đ và một chiếc xe đẩy xiên bẩn. Đường phố ngoài kia không dễ sống — nhưng ai cũng phải bắt đầu từ đâu đó.</p>
     <div class="btn-row" style="width:100%; max-width:320px;">
@@ -384,6 +477,31 @@
 
   <!-- ============ STREET (HOME) ============ -->
   <div class="screen" id="screen-street">
+    <svg class="street-skyline" viewBox="0 0 400 160" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="60" width="46" height="100" fill="#241a12"/>
+      <rect x="50" y="30" width="38" height="130" fill="#1e150e"/>
+      <rect x="92" y="72" width="54" height="88" fill="#251b13"/>
+      <rect x="150" y="44" width="42" height="116" fill="#1c130d"/>
+      <rect x="196" y="66" width="60" height="94" fill="#231a12"/>
+      <rect x="260" y="26" width="40" height="134" fill="#1e150e"/>
+      <rect x="304" y="58" width="50" height="102" fill="#251b13"/>
+      <rect x="358" y="40" width="42" height="120" fill="#1c130d"/>
+      <g opacity=".55">
+        <rect x="10" y="78" width="8" height="10" fill="#e8a23f"/>
+        <rect x="26" y="78" width="8" height="10" fill="#e8a23f"/>
+        <rect x="60" y="50" width="8" height="10" fill="#c97a2e"/>
+        <rect x="60" y="70" width="8" height="10" fill="#e8a23f"/>
+        <rect x="105" y="92" width="8" height="10" fill="#c97a2e"/>
+        <rect x="122" y="92" width="8" height="10" fill="#e8a23f"/>
+        <rect x="165" y="64" width="8" height="10" fill="#e8a23f"/>
+        <rect x="210" y="86" width="8" height="10" fill="#c97a2e"/>
+        <rect x="228" y="86" width="8" height="10" fill="#e8a23f"/>
+        <rect x="275" y="46" width="8" height="10" fill="#e8a23f"/>
+        <rect x="318" y="78" width="8" height="10" fill="#c97a2e"/>
+        <rect x="372" y="60" width="8" height="10" fill="#e8a23f"/>
+      </g>
+      <rect x="0" y="150" width="400" height="10" fill="#120e0b"/>
+    </svg>
     <div class="topbar">
       <div class="stat money"><span class="ic">💰</span><span id="moneyLabel">500.000đ</span></div>
       <div id="dayLabel">Ngày 1 · Thứ 2</div>
@@ -391,7 +509,54 @@
     </div>
     <div class="street-hero">
       <div class="weather-chip" id="weatherChip">☀️ Nắng nhẹ</div>
-      <div class="cart-emoji">🛒</div>
+      <div class="cart-wrap">
+        <svg viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="80" cy="148" rx="52" ry="7" fill="#000" opacity=".3"/>
+          <!-- khung xe -->
+          <rect x="20" y="56" width="96" height="58" rx="6" fill="#3a2418" stroke="#5c3a24" stroke-width="2"/>
+          <rect x="26" y="62" width="84" height="46" rx="3" fill="#241609"/>
+          <!-- vỉ than trên xe -->
+          <rect x="32" y="68" width="72" height="14" rx="3" fill="#1a0f07"/>
+          <g opacity=".9">
+            <ellipse cx="42" cy="75" rx="5" ry="4" fill="#ff7a2e"/>
+            <ellipse cx="58" cy="75" rx="5" ry="4" fill="#ff9a45"/>
+            <ellipse cx="74" cy="75" rx="5" ry="4" fill="#ff5a1f"/>
+            <ellipse cx="90" cy="75" rx="5" ry="4" fill="#ff8a3d"/>
+          </g>
+          <!-- xiên cắm trên vỉ -->
+          <line x1="40" y1="68" x2="40" y2="46" stroke="#c9903f" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="40" cy="50" r="4.5" fill="#c97a2e"/>
+          <circle cx="40" cy="58" r="4.5" fill="#b8691f"/>
+          <line x1="58" y1="68" x2="58" y2="42" stroke="#c9903f" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="58" cy="46" r="4.5" fill="#cc7d33"/>
+          <circle cx="58" cy="54" r="4.5" fill="#c97a2e"/>
+          <circle cx="58" cy="62" r="4.5" fill="#b8691f"/>
+          <line x1="76" y1="68" x2="76" y2="48" stroke="#c9903f" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="76" cy="52" r="4.5" fill="#c97a2e"/>
+          <circle cx="76" cy="60" r="4.5" fill="#cc7d33"/>
+          <!-- mái che -->
+          <path d="M14 56 L80 30 L146 56 Z" fill="#b8451c"/>
+          <path d="M14 56 L80 30 L146 56" fill="none" stroke="#8a3416" stroke-width="2"/>
+          <g fill="#e8622c">
+            <path d="M22 56 L38 49 L48 56 Z"/>
+            <path d="M58 56 L74 44 L86 56 Z"/>
+            <path d="M96 56 L112 47 L128 56 Z"/>
+          </g>
+          <!-- cọc mái -->
+          <rect x="16" y="55" width="4" height="18" fill="#5c3a24"/>
+          <rect x="140" y="55" width="4" height="18" fill="#5c3a24"/>
+          <!-- bảng hiệu -->
+          <rect x="44" y="86" width="72" height="16" rx="3" fill="#1a0f07" stroke="#5c3a24" stroke-width="1.5"/>
+          <text x="80" y="97" font-size="9" font-weight="800" fill="#e8b84b" text-anchor="middle" font-family="Arial">XIÊN BẨN</text>
+          <!-- bánh xe -->
+          <circle cx="34" cy="120" r="10" fill="#241609" stroke="#5c3a24" stroke-width="2.5"/>
+          <circle cx="34" cy="120" r="3" fill="#8a6a4a"/>
+          <circle cx="104" cy="120" r="10" fill="#241609" stroke="#5c3a24" stroke-width="2.5"/>
+          <circle cx="104" cy="120" r="3" fill="#8a6a4a"/>
+          <!-- tay đẩy -->
+          <path d="M116 62 Q134 58 134 78" fill="none" stroke="#5c3a24" stroke-width="4" stroke-linecap="round"/>
+        </svg>
+      </div>
       <div class="street-title" id="locationName">Vỉa hè Ngõ Chợ Tạm</div>
       <div class="street-sub" id="locationSub">Gần chợ dân sinh — khách rải rác cả ngày, đông nhất buổi chiều.</div>
     </div>
@@ -422,7 +587,11 @@
     <div class="queue-strip" id="queueStrip"></div>
 
     <div class="minigame-zone">
-      <div class="skewer-rack" id="skewerRack"></div>
+      <div class="grill-wrap">
+        <div class="grill-coals"></div>
+        <div class="grill-grid"></div>
+        <div class="skewer-rack" id="skewerRack"></div>
+      </div>
       <div class="serve-cta">
         <button class="btn btn-secondary" id="btnAddSkewer">+ Đặt xiên lên vỉ</button>
         <button class="btn btn-primary" id="btnServe">Giao cho khách ✅</button>
