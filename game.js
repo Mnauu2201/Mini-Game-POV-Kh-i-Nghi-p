@@ -12,45 +12,55 @@ const WEATHER = {
 };
 const WEATHER_KEYS = Object.keys(WEATHER);
 
-const INGREDIENT = {
-  meat:  { name:'Viên chiên (cá viên, bò viên...)', icon:'🍢', basePrice:1200, shelfLife:4, unit:'viên' },
-};
+// Danh sách nguyên liệu — mở khóa dần theo ngày
+const INGREDIENTS = [
+  { id:'bo',    name:'Bò viên',       icon:'🔴', color:'#c0392b', basePrice:1500, shelfLife:4, unlockDay:1 },
+  { id:'ca',    name:'Cá viên',       icon:'⚪', color:'#e8dcc8', basePrice:1200, shelfLife:4, unlockDay:1 },
+  { id:'xx',    name:'Xúc xích',      icon:'🌭', color:'#d4622a', basePrice:1800, shelfLife:4, unlockDay:3 },
+  { id:'tom',   name:'Tôm viên',      icon:'🦐', color:'#e8834b', basePrice:2200, shelfLife:3, unlockDay:5 },
+  { id:'hacao', name:'Há cảo',        icon:'🥟', color:'#e8c078', basePrice:2000, shelfLife:3, unlockDay:7 },
+  { id:'pho',   name:'Viên phô mai',  icon:'🧀', color:'#f0c040', basePrice:2500, shelfLife:3, unlockDay:9 },
+];
+function unlockedIngredients(){
+  return INGREDIENTS.filter(ing => ing.unlockDay <= S.day);
+}
+function getIngredient(id){ return INGREDIENTS.find(i=>i.id===id); }
 
 const CAT_TYPES = [
   {
     id:'ngoac', name:'Mèo Ngơ Ngác', icon:'🐱',
-    patienceTime: 26, patienceLabel:'Kiên nhẫn cao',
-    orderMin:1, orderMax:2, tipMult:1.0, angerMult:0.7,
-    quote:['Ơ... cho xin xiên?', 'Dạ... vâng ạ...'],
+    patienceTime: 55, patienceLabel:'Kiên nhẫn cao',
+    itemsMin:1, itemsMax:2, tipMult:1.0, angerMult:0.7,
+    quote:['Ơ... cho xin ạ?', 'Dạ... vâng ạ...'],
     weight:3,
   },
   {
     id:'nong', name:'Mèo Nóng Tính', icon:'😾',
-    patienceTime: 13, patienceLabel:'Kiên nhẫn thấp — tip cao nếu nhanh',
-    orderMin:2, orderMax:3, tipMult:1.6, angerMult:1.6,
+    patienceTime: 30, patienceLabel:'Kiên nhẫn thấp — tip cao nếu nhanh',
+    itemsMin:2, itemsMax:3, tipMult:1.6, angerMult:1.6,
     quote:['NHANH LÊN!!', 'Đói lắm rồi đó nha!'],
     weight:2,
   },
   {
     id:'khoc', name:'Mèo Hay Khóc', icon:'😿',
-    patienceTime: 18, patienceLabel:'Nhạy cảm — sai là mếu ngay',
-    orderMin:1, orderMax:2, tipMult:1.2, angerMult:2.0,
+    patienceTime: 40, patienceLabel:'Nhạy cảm — sai là mếu ngay',
+    itemsMin:1, itemsMax:2, tipMult:1.2, angerMult:2.0,
     quote:['Huhu đói bụng...', 'Làm đúng cho em nha...'],
     weight:2,
   },
   {
     id:'sang', name:'Mèo Sang Chảnh', icon:'😼',
-    patienceTime: 20, patienceLabel:'Khó tính — order nhiều, tip đậm',
-    orderMin:3, orderMax:4, tipMult:2.2, angerMult:1.3,
-    quote:['Cho tô xiên loại ngon nhất.', 'Phải chín đều nha, đừng có cháy.'],
+    patienceTime: 45, patienceLabel:'Khó tính — order nhiều, tip đậm',
+    itemsMin:2, itemsMax:4, tipMult:2.2, angerMult:1.3,
+    quote:['Cho phần ngon nhất nhé.', 'Phải chín đều nha, đừng có cháy.'],
     weight:1,
   },
 ];
 
-const SKEWER_PRICE = 8000; // giá bán 1 xiên
-const COOK_TIME_PERFECT_MIN = 3200; // ms - bắt đầu vùng "vừa chín"
-const COOK_TIME_PERFECT_MAX = 5200; // ms - hết vùng vừa chín
-const COOK_TIME_BURNT = 7500; // ms - cháy hẳn
+const SELL_MARGIN = 2.6; // giá bán = giá nhập * margin (xấp xỉ lợi nhuận gộp)
+const COOK_TIME_PERFECT_MIN = 4000; // ms - bắt đầu vùng "vừa chín"
+const COOK_TIME_PERFECT_MAX = 7000; // ms - hết vùng vừa chín
+const COOK_TIME_BURNT = 11000; // ms - cháy hẳn
 
 // ---------- STATE ----------
 let S = {
@@ -60,21 +70,20 @@ let S = {
   reputation: 3.0,
   weatherToday: 'sun',
   weatherForecast: [], // mảng 3 ngày tới (index0 = hôm nay)
-  stock: 0, // số xiên đã chế biến sẵn để bán (viên thô, tính theo "viên")
-  stockBought: 0, // số viên đã mua tối qua, còn hạn
-  stockAgeDay: 0,
+  stock: {},       // { bo: 12, ca: 8, ... } số viên tồn kho theo từng loại
+  stockAgeDay: {}, // { bo: 2, ca: 0, ... } số ngày đã để mỗi loại
   eventDaysUntilEvict: null, // random countdown ngày để trigger sự kiện (sau ngày 12)
   evictedToday: false,
   messages: [],
   // ---- serve session ----
   serve: {
     active:false,
-    stockLeft:0,
-    timeMinutes: 17*60, // 17:00 start
-    endMinutes: 21*60,  // 21:00 end
+    stockLeft:{},       // bản sao stock dùng trong ca bán, trừ dần khi nướng
+    timeMinutes: 7*60,  // 07:00 start
+    endMinutes: 22*60,  // 22:00 end
     queue: [], // customers waiting
     current: null, // current customer object
-    skewers: [], // {id, state:'raw'|'cooking'|'perfect'|'burnt', startedAt}
+    skewers: [], // {id, state:'raw'|'cooking'|'perfect'|'burnt', startedAt, items:[ingredientId,...]}
     revenueToday:0,
     tipsToday:0,
     servedToday:0,
@@ -82,7 +91,7 @@ let S = {
     repDeltaToday:0,
   },
   prep: {
-    pendingBuy: 0,
+    pendingBuy: {}, // { bo: 5, ca: 3, ... }
   },
 };
 
@@ -139,10 +148,12 @@ function advanceWeather(){
 function isWeekend(dow){ return dow === 0 || dow === 6; }
 
 // ---------- MARKET (giá nguyên liệu biến động) ----------
-let marketPriceToday = INGREDIENT.meat.basePrice;
+let marketPrices = {}; // { bo: 1500, ca: 1180, ... } giá hôm nay theo từng loại
 function rollMarketPrice(){
-  const variance = rand(-0.18, 0.22);
-  marketPriceToday = Math.round(INGREDIENT.meat.basePrice * (1+variance) / 100) * 100;
+  INGREDIENTS.forEach(ing=>{
+    const variance = rand(-0.15, 0.20);
+    marketPrices[ing.id] = Math.round(ing.basePrice * (1+variance) / 100) * 100;
+  });
 }
 
 // ============================================================
@@ -166,7 +177,8 @@ function init(){
   document.getElementById('btnConfirmPrep').addEventListener('click', confirmPrep);
   document.getElementById('btnSkipPrep').addEventListener('click', ()=>show('screen-street'));
   document.getElementById('btnEndShift').addEventListener('click', endServeDay);
-  document.getElementById('btnAddSkewer').addEventListener('click', addSkewerToRack);
+  document.getElementById('btnPutOnGrill').addEventListener('click', putBuildOnGrill);
+  document.getElementById('btnUndoBuild').addEventListener('click', removeLastBuildItem);
   document.getElementById('btnServe').addEventListener('click', tryServeCurrentCustomer);
   document.getElementById('btnNextDay').addEventListener('click', goToNextDay);
 }
@@ -174,17 +186,21 @@ function init(){
 // ============================================================
 // STREET SCREEN
 // ============================================================
+function totalStock(){
+  return Object.values(S.stock).reduce((a,b)=>a+b, 0);
+}
 function renderStreet(){
   document.getElementById('moneyLabel').textContent = formatMoney(S.money);
   document.getElementById('repLabel').textContent = S.reputation.toFixed(1);
   document.getElementById('dayLabel').textContent = `Ngày ${S.day} · ${DAYS_VI[S.dayOfWeek]}`;
   const w = WEATHER[S.weatherToday];
   document.getElementById('weatherChip').textContent = `${w.icon} ${w.label}`;
-  document.getElementById('prepHint').textContent = S.stock > 0 ? `Còn ${S.stock} viên tồn kho` : 'Chưa có hàng cho ngày mai';
-  const canSell = S.stock > 0;
+  const total = totalStock();
+  document.getElementById('prepHint').textContent = total > 0 ? `Còn ${total} viên tồn kho` : 'Chưa có hàng cho ngày mai';
+  const canSell = total > 0;
   document.getElementById('btnGoSell').disabled = !canSell;
   document.getElementById('btnGoSell').innerHTML = canSell
-    ? `Mở bán hôm nay 🍢 <span class="sub">Còn ${S.stock} viên</span>`
+    ? `Mở bán hôm nay 🍢 <span class="sub">Còn ${total} viên</span>`
     : `Chưa có hàng để bán <span class="sub">Nhập hàng trước đã</span>`;
 }
 
@@ -192,7 +208,7 @@ function renderStreet(){
 // PREP SCREEN — nhập hàng
 // ============================================================
 function openPrep(){
-  S.prep.pendingBuy = 0;
+  S.prep.pendingBuy = {};
   renderPrep();
   show('screen-prep');
 }
@@ -209,49 +225,90 @@ function renderPrep(){
     fRow.appendChild(card);
   });
 
-  // market card
+  // market cards - 1 thẻ mỗi loại nguyên liệu đã mở khóa
   const marketList = document.getElementById('marketList');
-  const priceDiff = marketPriceToday - INGREDIENT.meat.basePrice;
-  const priceClass = priceDiff > 50 ? 'up' : (priceDiff < -50 ? 'down' : '');
-  const priceArrow = priceDiff > 50 ? '▲' : (priceDiff < -50 ? '▼' : '—');
-  marketList.innerHTML = `
-    <div class="market-card">
+  marketList.innerHTML = '';
+  const unlocked = unlockedIngredients();
+  unlocked.forEach(ing=>{
+    const price = marketPrices[ing.id];
+    const priceDiff = price - ing.basePrice;
+    const priceClass = priceDiff > 30 ? 'up' : (priceDiff < -30 ? 'down' : '');
+    const priceArrow = priceDiff > 30 ? '▲' : (priceDiff < -30 ? '▼' : '—');
+    const qty = S.prep.pendingBuy[ing.id] || 0;
+    const curStock = S.stock[ing.id] || 0;
+    const curAge = S.stockAgeDay[ing.id] || 0;
+    const card = document.createElement('div');
+    card.className = 'market-card';
+    card.innerHTML = `
       <div class="market-title">
-        <div class="name">${INGREDIENT.meat.icon} ${INGREDIENT.meat.name}</div>
-        <div class="price ${priceClass}">${priceArrow} ${formatMoney(marketPriceToday)}/viên</div>
+        <div class="name">${ing.icon} ${ing.name}</div>
+        <div class="price ${priceClass}">${priceArrow} ${formatMoney(price)}/viên</div>
       </div>
       <div class="stepper">
-        <button id="stepDown">−</button>
-        <div class="val" id="stepVal">${S.prep.pendingBuy}</div>
-        <button id="stepUp">+</button>
+        <button class="ing-down" data-id="${ing.id}">−</button>
+        <div class="val" id="val-${ing.id}">${qty}</div>
+        <button class="ing-up" data-id="${ing.id}">+</button>
       </div>
-      <div class="stock-note">Hạn dùng ~${INGREDIENT.meat.shelfLife} ngày. Hiện tồn kho: ${S.stock} viên${S.stockAgeDay>0?` (đã để ${S.stockAgeDay} ngày)`:''}.</div>
-    </div>
-  `;
-  document.getElementById('stepDown').addEventListener('click', ()=>{
-    S.prep.pendingBuy = Math.max(0, S.prep.pendingBuy - 5);
-    updatePrepFooter();
+      <div class="stock-note">Hạn dùng ~${ing.shelfLife} ngày. Tồn kho: ${curStock} viên${curAge>0?` (đã để ${curAge} ngày)`:''}.</div>
+    `;
+    marketList.appendChild(card);
   });
-  document.getElementById('stepUp').addEventListener('click', ()=>{
-    const maxAfford = Math.floor(S.money / marketPriceToday);
-    S.prep.pendingBuy = Math.min(maxAfford, S.prep.pendingBuy + 5);
-    updatePrepFooter();
+  // thông báo nguyên liệu sắp mở khóa
+  const nextLock = INGREDIENTS.find(ing => ing.unlockDay > S.day);
+  if(nextLock){
+    const hint = document.createElement('div');
+    hint.style.cssText = 'text-align:center; font-size:12px; opacity:.55; padding:8px 10px; margin-top:2px;';
+    hint.textContent = `🔒 ${nextLock.name} sẽ mở khóa vào ngày ${nextLock.unlockDay}`;
+    marketList.appendChild(hint);
+  }
+
+  document.querySelectorAll('.ing-down').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = btn.dataset.id;
+      S.prep.pendingBuy[id] = Math.max(0, (S.prep.pendingBuy[id]||0) - 5);
+      updatePrepFooter();
+    });
+  });
+  document.querySelectorAll('.ing-up').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = btn.dataset.id;
+      S.prep.pendingBuy[id] = (S.prep.pendingBuy[id]||0) + 5;
+      updatePrepFooter();
+    });
   });
   updatePrepFooter();
 }
+function prepTotalCost(){
+  let total = 0;
+  for(const id in S.prep.pendingBuy){
+    total += (S.prep.pendingBuy[id]||0) * (marketPrices[id]||0);
+  }
+  return total;
+}
 function updatePrepFooter(){
-  document.getElementById('stepVal').textContent = S.prep.pendingBuy;
-  const cost = S.prep.pendingBuy * marketPriceToday;
+  for(const id in S.prep.pendingBuy){
+    const el = document.getElementById('val-'+id);
+    if(el) el.textContent = S.prep.pendingBuy[id];
+  }
+  const cost = prepTotalCost();
   document.getElementById('prepCost').textContent = formatMoney(cost);
-  document.getElementById('btnConfirmPrep').disabled = S.prep.pendingBuy === 0 || cost > S.money;
+  const totalQty = Object.values(S.prep.pendingBuy).reduce((a,b)=>a+b,0);
+  document.getElementById('btnConfirmPrep').disabled = totalQty === 0 || cost > S.money;
 }
 function confirmPrep(){
-  const cost = S.prep.pendingBuy * marketPriceToday;
+  const cost = prepTotalCost();
   if(cost > S.money) return;
   S.money -= cost;
-  S.stock += S.prep.pendingBuy;
-  S.stockAgeDay = 0;
-  addMessage(`Đã nhập ${S.prep.pendingBuy} viên hết ${formatMoney(cost)}.`);
+  let totalBought = 0;
+  for(const id in S.prep.pendingBuy){
+    const qty = S.prep.pendingBuy[id] || 0;
+    if(qty > 0){
+      S.stock[id] = (S.stock[id]||0) + qty;
+      S.stockAgeDay[id] = 0;
+      totalBought += qty;
+    }
+  }
+  addMessage(`Đã nhập ${totalBought} viên hết ${formatMoney(cost)}.`);
   renderStreet();
   show('screen-street');
 }
@@ -321,11 +378,11 @@ function currentHour(){
 // SERVE SCREEN — vòng lặp bán hàng chính
 // ============================================================
 function startServeDay(){
-  if(S.stock <= 0) return;
+  if(totalStock() <= 0) return;
   S.serve.active = true;
-  S.serve.stockLeft = S.stock;
-  S.serve.timeMinutes = 17*60;
-  S.serve.endMinutes = 21*60;
+  S.serve.stockLeft = {...S.stock};
+  S.serve.timeMinutes = 7*60;
+  S.serve.endMinutes = 22*60;
   S.serve.queue = [];
   S.serve.current = null;
   S.serve.skewers = [];
@@ -335,22 +392,23 @@ function startServeDay(){
   S.serve.missedToday = 0;
   S.serve.repDeltaToday = 0;
   S.evictedToday = false;
+  buildQueueItems = []; // que đang xâu dở trên tay (chưa đưa lên vỉ)
 
   spawnNextCustomer(true);
   renderServe();
   show('screen-serve');
 
   if(loopHandle) clearInterval(loopHandle);
-  loopHandle = setInterval(gameTick, 200); // tick 200ms = 1 phút giờ trong game (nhanh)
+  loopHandle = setInterval(gameTick, 200);
 }
 
 function gameTick(){
   if(!S.serve.active) return;
 
-  // thời gian trôi: 200ms thực = 2 phút giờ game -> 1 ca (4h = 240 phút) mất 24s thực
-  S.serve.timeMinutes += 2;
+  // thời gian trôi: 15 tiếng (900 phút) game trôi trong khoảng 6 phút thực (360000ms)
+  // 200ms thực -> 0.5 phút game (chậm hơn nhiều so với bản cũ 2 phút/tick)
+  S.serve.timeMinutes += 0.5;
 
-  // giảm kiên nhẫn khách hiện tại
   if(S.serve.current){
     const c = S.serve.current;
     c.timeLeft -= 0.2;
@@ -359,19 +417,15 @@ function gameTick(){
     }
   }
 
-  // cập nhật trạng thái nướng của các xiên
   updateSkewerStates();
 
-  // check hết giờ
   if(S.serve.timeMinutes >= S.serve.endMinutes){
     endServeDay();
     return;
   }
 
-  // check sự kiện trật tự đô thị (chỉ sau mốc ngày cho phép)
   if(!S.evictedToday && S.eventDaysUntilEvict !== null && S.eventDaysUntilEvict <= 0){
-    // random nhỏ mỗi tick để bất ngờ, xác suất tăng theo reputation (bán chạy dễ bị để ý)
-    const chancePerTick = 0.0009 * (1 + S.reputation/10);
+    const chancePerTick = 0.0003 * (1 + S.reputation/10);
     if(Math.random() < chancePerTick){
       triggerEviction();
       return;
@@ -386,9 +440,12 @@ function renderServe(){
   renderCustomerStage();
   renderQueue();
   renderSkewerRack();
+  renderIngredientTray();
+  renderCurrentBuild();
 }
 function renderServeHUD(){
-  document.getElementById('stockChip').textContent = `Viên còn: ${S.serve.stockLeft}`;
+  const total = Object.values(S.serve.stockLeft).reduce((a,b)=>a+b,0);
+  document.getElementById('stockChip').textContent = `Viên còn: ${total}`;
   const h = Math.floor(S.serve.timeMinutes/60);
   const m = Math.floor(S.serve.timeMinutes%60);
   document.getElementById('timeChip').textContent = `🕐 ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
@@ -396,23 +453,42 @@ function renderServeHUD(){
 
 // ---------- CUSTOMERS ----------
 function customerDemandWeights(){
-  // đơn giản: theo thời tiết + giờ, weight của từng loại mèo (giai đoạn 1 chỉ 1 khu vực: gần chợ)
   return CAT_TYPES.map(t=>({...t}));
+}
+function generateOrder(type){
+  // sinh order gồm các nguyên liệu cụ thể, chỉ dùng nguyên liệu đã mở khóa VÀ còn tồn kho
+  const avail = unlockedIngredients().filter(ing => (S.stock[ing.id]||0) > 0 || (S.serve.stockLeft[ing.id]||0) > 0);
+  const pool = avail.length > 0 ? avail : unlockedIngredients();
+  const itemCount = randInt(type.itemsMin, type.itemsMax);
+  const items = [];
+  for(let i=0;i<itemCount;i++){
+    items.push(pick(pool).id);
+  }
+  return items;
+}
+function orderSummaryText(items){
+  const counts = {};
+  items.forEach(id => counts[id] = (counts[id]||0)+1);
+  return Object.entries(counts).map(([id,n])=>{
+    const ing = getIngredient(id);
+    return `${n} ${ing.name.toLowerCase()}`;
+  }).join(', ');
 }
 
 function spawnNextCustomer(immediate){
   const doSpawn = ()=>{
     if(!S.serve.active) return;
     if(S.serve.current) return;
-    if(S.serve.stockLeft <= 0 && S.serve.skewers.length===0){
-      // hết hàng hoàn toàn -> không spawn thêm, chờ hết giờ
+    const totalLeft = Object.values(S.serve.stockLeft).reduce((a,b)=>a+b,0);
+    const onRack = S.serve.skewers.reduce((a,s)=>a+s.items.length,0);
+    if(totalLeft <= 0 && onRack===0 && buildQueueItems.length===0){
       return;
     }
     const type = pickWeighted(customerDemandWeights());
-    const qty = randInt(type.orderMin, type.orderMax);
+    const items = generateOrder(type);
     const cust = {
       type,
-      qty,
+      items,
       timeLeft: type.patienceTime,
       maxTime: type.patienceTime,
       quote: pick(type.quote),
@@ -426,14 +502,14 @@ function spawnNextCustomer(immediate){
     renderQueue();
   };
   if(immediate) doSpawn();
-  else setTimeout(doSpawn, rand(400,1200));
+  else setTimeout(doSpawn, rand(600,1600));
 }
 
 function renderCustomerStage(){
   const stage = document.getElementById('customerStage');
   const c = S.serve.current;
   if(!c){
-    stage.innerHTML = `<div style="opacity:.5; font-size:13px; padding-top:30px;">Chưa có khách... đang chờ 🍃</div>`;
+    stage.innerHTML = `<div style="opacity:.55; font-size:13px; padding-top:30px;">Chưa có khách... đang chờ 🍃</div>`;
     return;
   }
   const pct = Math.max(0, (c.timeLeft / c.maxTime) * 100);
@@ -445,7 +521,7 @@ function renderCustomerStage(){
       <div class="cat-emoji">${c.type.icon}</div>
       <div class="cat-name">${c.type.name}</div>
       <div class="patience-bar"><div class="patience-fill" style="width:${pct}%; background:${barColor};"></div></div>
-      <div class="order-bubble">"${c.quote}" — <span class="qty">${c.qty} xiên chín tới</span></div>
+      <div class="order-bubble">"${c.quote}"<br><span class="qty">${orderSummaryText(c.items)}</span></div>
     </div>
   `;
 }
@@ -476,29 +552,85 @@ function advanceQueue(){
   }
   renderCustomerStage();
   renderQueue();
-  // spawn thêm nếu queue mỏng
   if(S.serve.queue.length < 2){
     spawnNextCustomer(false);
   }
 }
 
-// ---------- SKEWER MINIGAME ----------
-function addSkewerToRack(){
-  if(!S.serve.active) return;
-  if(S.serve.stockLeft <= 0){
-    floaty('Hết nguyên liệu rồi!', '#d13d3d');
+// ---------- XÂU QUE: chọn nguyên liệu từ khay ----------
+let buildQueueItems = []; // mảng ingredientId đang xâu dở trên que hiện tại (chưa lên vỉ)
+
+function renderIngredientTray(){
+  const tray = document.getElementById('ingredientTray');
+  if(!tray) return;
+  tray.innerHTML = '';
+  unlockedIngredients().forEach(ing=>{
+    const left = S.serve.stockLeft[ing.id] || 0;
+    const div = document.createElement('div');
+    div.className = 'ing-slot' + (left<=0 ? ' empty':'');
+    div.innerHTML = `
+      <div class="ing-icon" style="background:${ing.color}">${ing.icon}</div>
+      <div class="ing-name">${ing.name}</div>
+      <div class="ing-count">${left}</div>
+    `;
+    if(left > 0){
+      div.addEventListener('click', ()=>addItemToBuild(ing.id));
+    }
+    tray.appendChild(div);
+  });
+}
+function addItemToBuild(ingId){
+  if((S.serve.stockLeft[ingId]||0) <= 0){
+    floaty('Hết nguyên liệu này!', '#d13d3d');
     return;
   }
-  if(S.serve.skewers.length >= 8){
+  if(buildQueueItems.length >= 4){
+    floaty('Que đầy rồi (tối đa 4 viên)!', '#e8b84b');
+    return;
+  }
+  S.serve.stockLeft[ingId]--;
+  buildQueueItems.push(ingId);
+  renderIngredientTray();
+  renderCurrentBuild();
+  renderServeHUD();
+}
+function removeLastBuildItem(){
+  if(buildQueueItems.length===0) return;
+  const id = buildQueueItems.pop();
+  S.serve.stockLeft[id] = (S.serve.stockLeft[id]||0) + 1;
+  renderIngredientTray();
+  renderCurrentBuild();
+  renderServeHUD();
+}
+function renderCurrentBuild(){
+  const wrap = document.getElementById('currentBuild');
+  if(!wrap) return;
+  if(buildQueueItems.length===0){
+    wrap.innerHTML = `<div class="build-empty">Chọn nguyên liệu bên dưới để xâu que 🍡</div>`;
+    document.getElementById('btnPutOnGrill').disabled = true;
+    return;
+  }
+  const chips = buildQueueItems.map((id,i)=>{
+    const ing = getIngredient(id);
+    return `<span class="build-chip" style="background:${ing.color}" data-idx="${i}">${ing.icon}</span>`;
+  }).join('');
+  wrap.innerHTML = `<div class="build-chips">${chips}</div>`;
+  document.getElementById('btnPutOnGrill').disabled = false;
+}
+function putBuildOnGrill(){
+  if(buildQueueItems.length===0) return;
+  if(S.serve.skewers.length >= 6){
     floaty('Vỉ đầy rồi!', '#e8b84b');
     return;
   }
-  S.serve.stockLeft--;
-  const sk = { id: skewerIdCounter++, state:'raw', startedAt: performance.now() };
+  const sk = { id: skewerIdCounter++, state:'raw', startedAt: performance.now(), items:[...buildQueueItems] };
   S.serve.skewers.push(sk);
+  buildQueueItems = [];
+  renderCurrentBuild();
   renderSkewerRack();
-  renderServeHUD();
 }
+
+// ---------- SKEWER MINIGAME (nướng) ----------
 function updateSkewerStates(){
   const now = performance.now();
   let changed = false;
@@ -508,7 +640,7 @@ function updateSkewerStates(){
     if(sk.state !== 'taken'){
       if(age < COOK_TIME_PERFECT_MIN) newState = 'raw';
       else if(age < COOK_TIME_PERFECT_MAX) newState = 'perfect';
-      else if(age < COOK_TIME_BURNT) newState = 'cooking'; // quá chín, sắp cháy - dùng màu cam
+      else if(age < COOK_TIME_BURNT) newState = 'cooking';
       else newState = 'burnt';
     }
     if(newState !== sk.state){ sk.state = newState; changed = true; }
@@ -528,40 +660,46 @@ function updateSkewerVisualPct(){
     }
   });
 }
-// Bảng màu viên chiên theo độ chín
-const BALL_COLORS = {
-  raw:     ['#e8c9a0', '#dcb98c', '#e0c095'],   // sống - nhạt, tái
-  cooking: ['#e8a23f', '#d4901f', '#e6a94a'],   // đang chín vàng ươm
-  perfect: ['#c97a2e', '#b8691f', '#cc7d33'],   // chín tới - nâu vàng đẹp
-  burnt:   ['#3a2318', '#2e1b12', '#42281a'],   // cháy đen
-};
-function skewerSVG(state){
-  // xác định màu 3 viên chiên theo state
-  let colors;
-  if(state==='raw') colors = BALL_COLORS.raw;
-  else if(state==='perfect') colors = BALL_COLORS.perfect;
-  else if(state==='cooking') colors = BALL_COLORS.cooking;
-  else if(state==='burnt') colors = BALL_COLORS.burnt;
-  else colors = BALL_COLORS.perfect; // taken - giữ màu chín tới
-  const smokeOpacity = (state==='cooking') ? 0.55 : (state==='burnt' ? 0.8 : 0);
+// Hệ số tối màu theo độ chín (áp cho màu gốc của từng nguyên liệu)
+function shadeColor(hex, pct){
+  // pct âm = tối hơn (cháy), pct dương = sáng hơn (còn sống/tái)
+  const num = parseInt(hex.slice(1),16);
+  let r = (num>>16) & 0xff, g = (num>>8) & 0xff, b = num & 0xff;
+  if(pct < 0){ r*= (1+pct); g*=(1+pct); b*=(1+pct); }
+  else { r = r+(255-r)*pct; g = g+(255-g)*pct; b = b+(255-b)*pct; }
+  r=Math.max(0,Math.min(255,Math.round(r))); g=Math.max(0,Math.min(255,Math.round(g))); b=Math.max(0,Math.min(255,Math.round(b)));
+  return `rgb(${r},${g},${b})`;
+}
+function skewerSVG(sk){
+  const state = sk.state;
+  let shadePct = 0;
+  if(state==='raw') shadePct = 0.35;
+  else if(state==='perfect') shadePct = -0.08;
+  else if(state==='cooking') shadePct = -0.25;
+  else if(state==='burnt') shadePct = -0.75;
+  else shadePct = -0.08; // taken
+
+  const n = sk.items.length;
+  const spacing = 96 / Math.max(n,1);
+  const balls = sk.items.map((id,i)=>{
+    const ing = getIngredient(id);
+    const cy = 20 + spacing*i + spacing/2;
+    const color = shadeColor(ing.color, shadePct);
+    return `<ellipse cx="22" cy="${cy}" rx="15" ry="${Math.min(13, spacing/2-2)}" fill="${color}"/>
+            <ellipse cx="22" cy="${cy}" rx="15" ry="${Math.min(13, spacing/2-2)}" fill="url(#shine)" opacity=".45"/>`;
+  }).join('');
+  const smokeOpacity = (state==='cooking') ? 0.5 : (state==='burnt' ? 0.8 : 0);
   return `
-  <svg viewBox="0 0 44 108" xmlns="http://www.w3.org/2000/svg">
+  <svg viewBox="0 0 44 116" xmlns="http://www.w3.org/2000/svg">
     ${smokeOpacity>0 ? `
     <g opacity="${smokeOpacity}">
-      <path d="M14 18 Q10 10 15 4" stroke="#cfcfcf" stroke-width="2.2" fill="none" stroke-linecap="round"/>
-      <path d="M30 16 Q34 8 28 2" stroke="#cfcfcf" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+      <path d="M14 16 Q10 8 15 2" stroke="#cfcfcf" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+      <path d="M30 14 Q34 6 28 0" stroke="#cfcfcf" stroke-width="2.2" fill="none" stroke-linecap="round"/>
     </g>` : ''}
-    <!-- que xiên tre -->
-    <rect x="20.5" y="6" width="3" height="96" rx="1.5" fill="#c9903f"/>
-    <rect x="21.2" y="6" width="1" height="96" fill="#e0b06a" opacity=".6"/>
-    <polygon points="20.5,102 23.5,102 22,108" fill="#a8722a"/>
-    <!-- 3 viên chiên xâu trên que -->
-    <ellipse cx="22" cy="26" rx="15" ry="13" fill="${colors[0]}"/>
-    <ellipse cx="22" cy="26" rx="15" ry="13" fill="url(#shine)" opacity=".5"/>
-    <ellipse cx="22" cy="52" rx="15.5" ry="13.5" fill="${colors[1]}"/>
-    <ellipse cx="22" cy="52" rx="15.5" ry="13.5" fill="url(#shine)" opacity=".5"/>
-    <ellipse cx="22" cy="78" rx="15" ry="13" fill="${colors[2]}"/>
-    <ellipse cx="22" cy="78" rx="15" ry="13" fill="url(#shine)" opacity=".5"/>
+    <rect x="20.5" y="14" width="3" height="96" rx="1.5" fill="#c9903f"/>
+    <rect x="21.2" y="14" width="1" height="96" fill="#e0b06a" opacity=".6"/>
+    <polygon points="20.5,110 23.5,110 22,116" fill="#a8722a"/>
+    ${balls}
     <defs>
       <radialGradient id="shine" cx="35%" cy="30%" r="60%">
         <stop offset="0%" stop-color="#fff" stop-opacity=".5"/>
@@ -574,7 +712,7 @@ function renderSkewerRack(){
   const rack = document.getElementById('skewerRack');
   rack.innerHTML = '';
   if(S.serve.skewers.length === 0){
-    rack.innerHTML = `<div class="rack-empty-hint">Vỉ đang trống — bấm "Đặt xiên lên vỉ" để bắt đầu nướng 🔥</div>`;
+    rack.innerHTML = `<div class="rack-empty-hint">Vỉ đang trống — xâu que rồi bấm "Đặt lên vỉ" để nướng 🔥</div>`;
     return;
   }
   S.serve.skewers.forEach(sk=>{
@@ -589,75 +727,70 @@ function renderSkewerRack(){
     else pctText='SỐNG';
     div.innerHTML = `
       <div class="pct-badge">${pctText}</div>
-      ${skewerSVG(sk.state)}
+      ${skewerSVG(sk)}
     `;
     div.addEventListener('click', ()=>flipSkewer(sk.id));
     rack.appendChild(div);
   });
 }
 function flipSkewer(id){
-  // "lật" xiên = lấy ra khỏi vỉ ngay tại thời điểm bấm, đóng băng trạng thái để giao khách
   const sk = S.serve.skewers.find(s=>s.id===id);
   if(!sk || sk.state==='taken') return;
   if(sk.state === 'raw'){
     floaty('Còn sống, chờ chút!', '#c9903f');
     return;
   }
-  sk.state = 'taken';
-  sk.finalQuality = sk.readyQuality || sk.state;
-  // lưu chất lượng thật tại thời điểm lật
   const now = performance.now();
   const age = now - sk.startedAt;
   if(age < COOK_TIME_PERFECT_MIN) sk.quality = 'raw';
   else if(age < COOK_TIME_PERFECT_MAX) sk.quality = 'perfect';
   else if(age < COOK_TIME_BURNT) sk.quality = 'over';
   else sk.quality = 'burnt';
+  sk.state = 'taken';
   sk.ready = true;
   renderSkewerRack();
 }
 
+// ---------- GIAO HÀNG: khớp que đã lật với order của khách ----------
+function orderMatchesSkewer(orderItems, skewerItems){
+  // so khớp đa tập hợp (không quan tâm thứ tự)
+  const a = [...orderItems].sort();
+  const b = [...skewerItems].sort();
+  if(a.length !== b.length) return false;
+  for(let i=0;i<a.length;i++) if(a[i]!==b[i]) return false;
+  return true;
+}
 function tryServeCurrentCustomer(){
   const c = S.serve.current;
   if(!c){ floaty('Chưa có khách để giao', '#999'); return; }
   const readySkewers = S.serve.skewers.filter(s=>s.ready);
-  if(readySkewers.length < c.qty){
-    floaty(`Cần ${c.qty} xiên đã lật, mới có ${readySkewers.length}`, '#e8b84b');
+  const matchIdx = readySkewers.findIndex(s=>orderMatchesSkewer(c.items, s.items));
+  if(matchIdx === -1){
+    floaty(`Chưa đúng món khách gọi: ${orderSummaryText(c.items)}`, '#e8b84b');
     return;
   }
-  // lấy đúng số lượng xiên đã lật (ưu tiên xiên cũ trước)
-  const used = readySkewers.slice(0, c.qty);
-  const perfectCount = used.filter(s=>s.quality==='perfect').length;
-  const burntCount = used.filter(s=>s.quality==='burnt').length;
-  const rawOrOverCount = used.length - perfectCount - burntCount;
+  const used = readySkewers[matchIdx];
+  const idx = S.serve.skewers.findIndex(s=>s.id===used.id);
+  if(idx>-1) S.serve.skewers.splice(idx,1);
 
-  const qualityScore = (perfectCount*1 + rawOrOverCount*0.4 + burntCount*0) / used.length;
+  const baseRevenue = used.items.reduce((sum,id)=>{
+    const ing = getIngredient(id);
+    return sum + Math.round(ing.basePrice * SELL_MARGIN);
+  }, 0);
 
-  // xóa xiên đã dùng khỏi vỉ
-  used.forEach(u=>{
-    const idx = S.serve.skewers.findIndex(s=>s.id===u.id);
-    if(idx>-1) S.serve.skewers.splice(idx,1);
-  });
-
-  const baseRevenue = c.qty * SKEWER_PRICE;
-  let tip = 0;
-  let repDelta = 0;
-  let msg = '';
-
-  if(qualityScore >= 0.9){
+  let tip = 0, repDelta = 0;
+  if(used.quality === 'perfect'){
     tip = Math.round(baseRevenue * 0.25 * c.type.tipMult);
     repDelta = 0.02;
-    msg = 'perfect';
     floaty(`Hoàn hảo! +${formatMoney(baseRevenue+tip)}`, '#7ed957');
-  } else if(qualityScore >= 0.5){
+  } else if(used.quality === 'raw' || used.quality === 'over'){
     tip = Math.round(baseRevenue * 0.05);
     repDelta = 0.0;
-    msg = 'ok';
     floaty(`Tạm ổn +${formatMoney(baseRevenue+tip)}`, '#e8b84b');
   } else {
     tip = 0;
     repDelta = -0.04 * c.type.angerMult;
-    msg = 'bad';
-    floaty(`Khách chê! ${repDelta.toFixed(2)}⭐`, '#d13d3d');
+    floaty(`Khách chê cháy! ${repDelta.toFixed(2)}⭐`, '#d13d3d');
   }
 
   S.money += baseRevenue + tip;
@@ -670,7 +803,9 @@ function tryServeCurrentCustomer(){
   S.serve.current = null;
   advanceQueue();
   renderServeHUD();
+  renderSkewerRack();
 }
+
 
 function endServeDay(){
   S.serve.active = false;
@@ -724,21 +859,19 @@ function packItem(el){
 }
 function resolveEviction(success){
   if(evictTimerHandle){ clearInterval(evictTimerHandle); evictTimerHandle=null; }
-  const remainingSkewersValue = S.serve.stockLeft * (INGREDIENT.meat.basePrice*1.5);
   if(success){
     addMessage('Dọn kịp trước khi trật tự đô thị tới — chỉ mất chút doanh thu.');
     floaty('Dọn kịp! 💨', '#7ed957');
-    // mất 1 phần doanh thu ngày đó (dừng bán sớm), giữ nguyên liệu
   } else {
     addMessage('Không kịp dọn — bị tịch thu nguyên liệu còn lại và phạt tiền.');
     floaty('Bị tịch thu hết! 😱', '#d13d3d');
     const fine = Math.round(S.money * 0.05);
     S.money = Math.max(0, S.money - fine);
-    S.serve.stockLeft = 0;
-    S.stock = 0;
+    S.serve.stockLeft = {};
+    S.stock = {};
     S.serve.skewers = [];
+    buildQueueItems = [];
   }
-  // set lại mốc ngẫu nhiên cho lần trật tự đô thị tiếp theo
   S.eventDaysUntilEvict = randInt(3,7);
   setTimeout(()=>showDaySummary(), 900);
 }
@@ -761,8 +894,12 @@ function showDaySummary(){
     <div class="summary-row"><span>Uy tín thay đổi</span><span class="${repD>=0?'pos':'neg'}">${repD>=0?'+':''}${repD.toFixed(2)}⭐</span></div>
     <div class="summary-row total"><span>Tổng tiền hiện có</span><span>${formatMoney(S.money)}</span></div>
   `;
-  // xiên còn sống trên vỉ bị bỏ phí, viên chưa nướng thì giữ lại thành tồn kho
-  S.stock = S.serve.stockLeft;
+  // viên chưa nướng thì giữ lại thành tồn kho, cộng ngược viên đang xâu dở trên tay
+  buildQueueItems.forEach(id=>{
+    S.serve.stockLeft[id] = (S.serve.stockLeft[id]||0) + 1;
+  });
+  buildQueueItems = [];
+  S.stock = {...S.serve.stockLeft};
   show('screen-summary');
 }
 
@@ -773,14 +910,20 @@ function goToNextDay(){
   rollMarketPrice();
   if(S.eventDaysUntilEvict !== null) S.eventDaysUntilEvict--;
 
-  // hao hụt tồn kho theo hạn dùng
-  S.stockAgeDay++;
-  if(S.stockAgeDay >= INGREDIENT.meat.shelfLife){
-    if(S.stock > 0){
-      addMessage(`${S.stock} viên đã hỏng do để quá hạn!`);
-      S.stock = 0;
+  // hao hụt tồn kho theo hạn dùng, riêng từng loại nguyên liệu
+  let spoiledMsgs = [];
+  for(const id in S.stock){
+    if((S.stock[id]||0) <= 0) continue;
+    S.stockAgeDay[id] = (S.stockAgeDay[id]||0) + 1;
+    const ing = getIngredient(id);
+    if(S.stockAgeDay[id] >= ing.shelfLife){
+      spoiledMsgs.push(`${S.stock[id]} ${ing.name.toLowerCase()}`);
+      S.stock[id] = 0;
+      S.stockAgeDay[id] = 0;
     }
-    S.stockAgeDay = 0;
+  }
+  if(spoiledMsgs.length>0){
+    addMessage(`Đã hỏng do để quá hạn: ${spoiledMsgs.join(', ')}.`);
   }
 
   renderStreet();

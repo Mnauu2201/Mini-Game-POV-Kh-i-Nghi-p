@@ -4,27 +4,30 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Vỉa Hè Khởi Nghiệp</title>
-<meta name="theme-color" content="#1a1410">
+<meta name="theme-color" content="#fff6e8">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Vỉa Hè">
 <style>
   :root{
-    --ink:#1a1410;
-    --paper:#f4ead9;
+    --cream:#fff6e8;
+    --cream-deep:#fbe9c8;
+    --ink:#3a2c1e;
+    --ink-soft:#6b5644;
+    --paper:#3a2c1e;
     --char-coal:#2b2320;
     --ember:#e8622c;
     --ember-dark:#b8451c;
-    --broth:#8a9a5b;
+    --broth:#7a9450;
     --broth-dark:#5c6b38;
     --tea:#c9903f;
-    --gold:#e8b84b;
+    --gold:#d99a1f;
     --danger:#d13d3d;
     --danger-dark:#8f2424;
-    --panel:#2b2320;
-    --panel-line:#4a3d34;
+    --panel:#ffffff;
+    --panel-line:#f0dcb4;
     box-sizing:border-box;
     padding-top: env(safe-area-inset-top, 0px);
     padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -32,7 +35,7 @@
   *{box-sizing:border-box;}
   html,body{
     height:100%; margin:0; padding:0;
-    background: var(--ink);
+    background: var(--cream);
     font-family: 'Be Vietnam Pro', -apple-system, 'Segoe UI', sans-serif;
     overscroll-behavior:none;
     -webkit-user-select:none; user-select:none;
@@ -45,8 +48,8 @@
   #app{
     position:fixed; inset:0;
     display:flex; flex-direction:column;
-    background: var(--ink);
-    color: var(--paper);
+    background: var(--cream);
+    color: var(--ink);
     height:100%;
     overflow:hidden;
   }
@@ -85,14 +88,14 @@
   #screen-street{
     justify-content:flex-start;
     background:
-      radial-gradient(ellipse at 50% -10%, #3a2f26 0%, transparent 60%),
-      linear-gradient(180deg, #241c17 0%, #1a1410 55%, #120e0b 100%);
+      radial-gradient(ellipse at 50% -10%, #ffeecb 0%, transparent 55%),
+      linear-gradient(180deg, var(--cream) 0%, var(--cream) 60%, var(--cream-deep) 100%);
     position:relative;
     overflow:hidden;
   }
   .street-skyline{
-    position:absolute; left:0; right:0; bottom:0; height:38%;
-    z-index:0; pointer-events:none; opacity:.9;
+    position:absolute; left:0; right:0; bottom:0; height:20%; max-height:120px;
+    z-index:0; pointer-events:none; opacity:.5;
   }
   .street-hero{
     flex:1;
@@ -103,18 +106,20 @@
     position:relative;
     z-index:1;
   }
-  .cart-wrap{ width:168px; height:168px; filter:drop-shadow(0 10px 16px rgba(0,0,0,.55)); animation:sway 3.4s ease-in-out infinite; }
+  .cart-wrap{ width:168px; height:168px; filter:drop-shadow(0 10px 16px rgba(120,80,40,.22)); animation:sway 3.4s ease-in-out infinite; }
   .cart-wrap svg{ width:100%; height:100%; }
   @keyframes sway{0%,100%{transform:rotate(-1.4deg) translateY(0);}50%{transform:rotate(1.4deg) translateY(-5px);}}
   .weather-chip{
     display:flex; align-items:center; gap:6px;
-    background:rgba(0,0,0,.28); border:1px solid var(--panel-line);
-    border-radius:16px; padding:5px 12px; font-size:12.5px; font-weight:600; opacity:.9;
+    background:#ffffff; border:1px solid var(--panel-line);
+    border-radius:16px; padding:5px 12px; font-size:12.5px; font-weight:700; opacity:.95;
+    color:var(--ink); box-shadow:0 2px 6px rgba(180,140,80,.15);
   }
-  .street-title{font-size:22px; font-weight:800; letter-spacing:.2px; margin:2px 0 0;}
-  .street-sub{font-size:13px; opacity:.65; max-width:260px; line-height:1.5;}
+  .street-title{font-size:22px; font-weight:800; letter-spacing:.2px; margin:2px 0 0; color:var(--ink);}
+  .street-sub{font-size:13px; opacity:.7; max-width:260px; line-height:1.5; color:var(--ink-soft);}
 
   .btn-row{
+    position:relative; z-index:2;
     display:flex; flex-direction:column; gap:10px;
     padding:14px 20px calc(18px + env(safe-area-inset-bottom,0px));
     flex-shrink:0;
@@ -149,7 +154,7 @@
   }
 
   /* ---------- SERVE SCREEN ---------- */
-  #screen-serve{background: linear-gradient(180deg,#20140f 0%, #150d09 100%); overflow-y:auto;}
+  #screen-serve{background: linear-gradient(180deg, var(--cream) 0%, var(--cream-deep) 100%); overflow-y:auto;}
   .serve-top{
     display:flex; align-items:center; justify-content:space-between;
     padding:8px 14px; flex-shrink:0;
@@ -185,12 +190,13 @@
   .patience-fill{height:100%; width:100%; background:var(--broth); transition:width .25s linear, background .25s linear;}
   .order-bubble{
     margin-top:6px;
-    background:var(--paper); color:var(--ink);
+    background:#ffffff; color:var(--ink);
     border-radius:14px 14px 14px 3px;
     padding:8px 14px;
     font-size:13.5px; font-weight:700;
     max-width:260px; text-align:center;
-    box-shadow:0 4px 10px rgba(0,0,0,.3);
+    box-shadow:0 4px 10px rgba(180,140,80,.2);
+    border:1px solid var(--panel-line);
   }
   .order-bubble .qty{color:var(--ember-dark);}
 
@@ -265,7 +271,51 @@
   .rack-empty-hint{
     position:relative; z-index:2;
     display:flex; align-items:center; justify-content:center;
-    min-height:110px; font-size:12.5px; opacity:.55; text-align:center; padding:0 20px;
+    min-height:110px; font-size:12.5px; color:#f0dcb4; opacity:.75; text-align:center; padding:0 20px;
+  }
+
+  /* ---------- QUE ĐANG XÂU (build zone) ---------- */
+  .build-zone{
+    background:#ffffff; border:1.5px solid var(--panel-line); border-radius:14px;
+    padding:10px 12px;
+  }
+  .build-label{font-size:11px; font-weight:700; opacity:.6; margin-bottom:6px; color:var(--ink-soft);}
+  .current-build{ min-height:40px; display:flex; align-items:center; }
+  .build-empty{font-size:12.5px; opacity:.55; color:var(--ink-soft);}
+  .build-chips{display:flex; gap:6px; flex-wrap:wrap;}
+  .build-chip{
+    width:34px; height:34px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:16px; box-shadow:0 2px 5px rgba(0,0,0,.18);
+    border:2px solid rgba(255,255,255,.6);
+  }
+  .build-actions{display:flex; gap:8px; margin-top:8px;}
+  .build-actions .btn{flex:1; padding:9px; font-size:13px;}
+  .btn-undo{opacity:.8;}
+
+  /* ---------- KHAY NGUYÊN LIỆU ---------- */
+  .ingredient-tray{
+    display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;
+  }
+  .ing-slot{
+    background:#ffffff; border:1.5px solid var(--panel-line); border-radius:14px;
+    padding:8px 6px; display:flex; flex-direction:column; align-items:center; gap:3px;
+    position:relative; cursor:pointer; -webkit-tap-highlight-color:transparent;
+    transition:transform .1s ease;
+  }
+  .ing-slot:active{transform:scale(.95);}
+  .ing-slot.empty{opacity:.4; pointer-events:none;}
+  .ing-icon{
+    width:38px; height:38px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center; font-size:18px;
+    box-shadow:0 2px 5px rgba(0,0,0,.15); border:2px solid rgba(255,255,255,.7);
+  }
+  .ing-name{font-size:10.5px; font-weight:700; color:var(--ink); text-align:center; line-height:1.2;}
+  .ing-count{
+    position:absolute; top:4px; right:4px;
+    background:var(--ember); color:#fff; font-size:9.5px; font-weight:800;
+    min-width:16px; height:16px; border-radius:8px; display:flex; align-items:center; justify-content:center;
+    padding:0 3px;
   }
 
   .serve-cta{
@@ -288,7 +338,7 @@
   }
 
   /* ---------- PREP SCREEN (nhập hàng) ---------- */
-  #screen-prep{background:linear-gradient(180deg,#1c150f,#120d09);}
+  #screen-prep{background:linear-gradient(180deg, var(--cream), var(--cream-deep));}
   .prep-scroll{flex:1; overflow-y:auto; padding:4px 18px 10px;}
   .prep-header{padding:6px 18px 4px;}
   .prep-header h2{margin:4px 0 2px; font-size:19px;}
@@ -389,24 +439,25 @@
     padding:14px 18px calc(20px + env(safe-area-inset-bottom,0px));
     overflow-y:auto;
     animation:sheetUp .22s ease;
+    color:#f4ead9;
   }
   @keyframes sheetUp{from{transform:translateY(30px); opacity:.4;}to{transform:none; opacity:1;}}
-  .sheet-handle{width:38px; height:4px; background:var(--panel-line); border-radius:3px; margin:0 auto 12px;}
-  .sheet-title{font-size:17px; font-weight:800; margin-bottom:10px; display:flex; align-items:center; gap:7px; color:var(--paper);}
+  .sheet-handle{width:38px; height:4px; background:#4a3d34; border-radius:3px; margin:0 auto 12px;}
+  .sheet-title{font-size:17px; font-weight:800; margin-bottom:10px; display:flex; align-items:center; gap:7px; color:#f4ead9;}
   .phone-section{margin-bottom:16px;}
-  .phone-section h4{font-size:12px; text-transform:none; opacity:.75; margin:0 0 8px; font-weight:700; color:var(--paper);}
-  .hour-bars{display:flex; align-items:flex-end; gap:4px; height:64px; margin-bottom:6px; background:rgba(255,255,255,.04); border-radius:8px; padding:6px 4px 0;}
+  .phone-section h4{font-size:12px; text-transform:none; opacity:.75; margin:0 0 8px; font-weight:700; color:#f4ead9;}
+  .hour-bars{display:flex; align-items:flex-end; gap:4px; height:64px; margin-bottom:6px; background:rgba(255,255,255,.06); border-radius:8px; padding:6px 4px 0;}
   .hbar{flex:1; background:var(--tea); border-radius:3px 3px 0 0; opacity:.65; min-height:6px;}
   .hbar.now{opacity:1; background:var(--gold); box-shadow:0 0 8px rgba(232,184,75,.5);}
-  .hour-labels{display:flex; gap:4px; font-size:10px; opacity:.7; text-align:center; color:var(--paper); font-weight:600;}
+  .hour-labels{display:flex; gap:4px; font-size:10px; opacity:.7; text-align:center; color:#f4ead9; font-weight:600;}
   .hour-labels span{flex:1;}
   .msg-item{
-    background:var(--panel); border:1px solid var(--panel-line); border-radius:12px;
-    padding:9px 12px; font-size:13px; margin-bottom:7px; line-height:1.55; color:var(--paper);
+    background:#241c17; border:1px solid #4a3d34; border-radius:12px;
+    padding:9px 12px; font-size:13px; margin-bottom:7px; line-height:1.55; color:#f4ead9;
   }
   .close-sheet{
     position:absolute; top:14px; right:14px; width:32px; height:32px; border-radius:50%;
-    background:var(--panel); border:1px solid var(--panel-line); color:var(--paper);
+    background:#241c17; border:1px solid #4a3d34; color:#f4ead9;
     font-size:16px; display:flex; align-items:center; justify-content:center;
     z-index:2;
   }
@@ -414,11 +465,11 @@
   /* ---------- ONBOARDING ---------- */
   #screen-intro{
     justify-content:center; align-items:center; text-align:center; padding:26px; gap:12px;
-    background:linear-gradient(180deg,#241c17,#120e0b);
+    background:linear-gradient(180deg, var(--cream), var(--cream-deep));
   }
   #screen-intro .cart-wrap{width:190px; height:190px;}
-  #screen-intro h1{font-size:26px; margin:6px 0 2px;}
-  #screen-intro p{font-size:14px; opacity:.7; max-width:280px; line-height:1.6; margin:0;}
+  #screen-intro h1{font-size:26px; margin:6px 0 2px; color:var(--ink);}
+  #screen-intro p{font-size:14px; opacity:.75; max-width:280px; line-height:1.6; margin:0; color:var(--ink-soft);}
 
   .hidden{display:none !important;}
 </style>
@@ -478,29 +529,29 @@
   <!-- ============ STREET (HOME) ============ -->
   <div class="screen" id="screen-street">
     <svg class="street-skyline" viewBox="0 0 400 160" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="0" y="60" width="46" height="100" fill="#241a12"/>
-      <rect x="50" y="30" width="38" height="130" fill="#1e150e"/>
-      <rect x="92" y="72" width="54" height="88" fill="#251b13"/>
-      <rect x="150" y="44" width="42" height="116" fill="#1c130d"/>
-      <rect x="196" y="66" width="60" height="94" fill="#231a12"/>
-      <rect x="260" y="26" width="40" height="134" fill="#1e150e"/>
-      <rect x="304" y="58" width="50" height="102" fill="#251b13"/>
-      <rect x="358" y="40" width="42" height="120" fill="#1c130d"/>
-      <g opacity=".55">
-        <rect x="10" y="78" width="8" height="10" fill="#e8a23f"/>
-        <rect x="26" y="78" width="8" height="10" fill="#e8a23f"/>
-        <rect x="60" y="50" width="8" height="10" fill="#c97a2e"/>
-        <rect x="60" y="70" width="8" height="10" fill="#e8a23f"/>
-        <rect x="105" y="92" width="8" height="10" fill="#c97a2e"/>
-        <rect x="122" y="92" width="8" height="10" fill="#e8a23f"/>
-        <rect x="165" y="64" width="8" height="10" fill="#e8a23f"/>
-        <rect x="210" y="86" width="8" height="10" fill="#c97a2e"/>
-        <rect x="228" y="86" width="8" height="10" fill="#e8a23f"/>
-        <rect x="275" y="46" width="8" height="10" fill="#e8a23f"/>
-        <rect x="318" y="78" width="8" height="10" fill="#c97a2e"/>
-        <rect x="372" y="60" width="8" height="10" fill="#e8a23f"/>
+      <rect x="0" y="60" width="46" height="100" fill="#e8d3a8"/>
+      <rect x="50" y="30" width="38" height="130" fill="#dcc292"/>
+      <rect x="92" y="72" width="54" height="88" fill="#e8d3a8"/>
+      <rect x="150" y="44" width="42" height="116" fill="#d8be8c"/>
+      <rect x="196" y="66" width="60" height="94" fill="#e8d3a8"/>
+      <rect x="260" y="26" width="40" height="134" fill="#dcc292"/>
+      <rect x="304" y="58" width="50" height="102" fill="#e8d3a8"/>
+      <rect x="358" y="40" width="42" height="120" fill="#d8be8c"/>
+      <g opacity=".5">
+        <rect x="10" y="78" width="8" height="10" fill="#c9a865"/>
+        <rect x="26" y="78" width="8" height="10" fill="#c9a865"/>
+        <rect x="60" y="50" width="8" height="10" fill="#c9a865"/>
+        <rect x="60" y="70" width="8" height="10" fill="#c9a865"/>
+        <rect x="105" y="92" width="8" height="10" fill="#c9a865"/>
+        <rect x="122" y="92" width="8" height="10" fill="#c9a865"/>
+        <rect x="165" y="64" width="8" height="10" fill="#c9a865"/>
+        <rect x="210" y="86" width="8" height="10" fill="#c9a865"/>
+        <rect x="228" y="86" width="8" height="10" fill="#c9a865"/>
+        <rect x="275" y="46" width="8" height="10" fill="#c9a865"/>
+        <rect x="318" y="78" width="8" height="10" fill="#c9a865"/>
+        <rect x="372" y="60" width="8" height="10" fill="#c9a865"/>
       </g>
-      <rect x="0" y="150" width="400" height="10" fill="#120e0b"/>
+      <rect x="0" y="150" width="400" height="10" fill="#e0c896"/>
     </svg>
     <div class="topbar">
       <div class="stat money"><span class="ic">💰</span><span id="moneyLabel">500.000đ</span></div>
@@ -592,8 +643,19 @@
         <div class="grill-grid"></div>
         <div class="skewer-rack" id="skewerRack"></div>
       </div>
+
+      <div class="build-zone">
+        <div class="build-label">Que đang xâu</div>
+        <div class="current-build" id="currentBuild"></div>
+        <div class="build-actions">
+          <button class="btn btn-ghost btn-undo" id="btnUndoBuild">↩ Bỏ viên cuối</button>
+          <button class="btn btn-secondary" id="btnPutOnGrill" disabled>Đặt lên vỉ 🔥</button>
+        </div>
+      </div>
+
+      <div class="ingredient-tray" id="ingredientTray"></div>
+
       <div class="serve-cta">
-        <button class="btn btn-secondary" id="btnAddSkewer">+ Đặt xiên lên vỉ</button>
         <button class="btn btn-primary" id="btnServe">Giao cho khách ✅</button>
       </div>
     </div>
@@ -619,9 +681,9 @@
   <!-- ============ EVICTION ============ -->
   <div class="screen" id="screen-evict">
     <div class="siren">🚨</div>
-    <div style="font-size:16px; font-weight:800; letter-spacing:.3px;">TRẬT TỰ ĐÔ THỊ ĐANG TỚI!</div>
+    <div style="font-size:16px; font-weight:800; letter-spacing:.3px; color:#fff0e0;">TRẬT TỰ ĐÔ THỊ ĐANG TỚI!</div>
     <div id="evictTimer">15</div>
-    <div style="font-size:12.5px; opacity:.7; max-width:260px;">Chạm nhanh để thu dọn hết đồ trước khi hết giờ!</div>
+    <div style="font-size:12.5px; opacity:.85; max-width:260px; color:#fff0e0;">Chạm nhanh để thu dọn hết đồ trước khi hết giờ!</div>
     <div class="evict-grid" id="evictGrid"></div>
   </div>
 
